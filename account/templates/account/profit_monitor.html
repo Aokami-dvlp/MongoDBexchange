@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Profit Monitor{% endblock %}
+
+{% block content %}
+  <h1>Profit Monitor</h1>
+  <p>This page displays the profit/loss deriving from each user operations on this platform.</p>
+<ul>
+{% for user in profiles %}
+    <li><p> {{ user.username }}: {{ user.profit }}€ </p></li>
+{% endfor %}
+</ul>
+{% endblock %}

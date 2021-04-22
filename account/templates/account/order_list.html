@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Order list{% endblock %}
+
+{% block content %}
+<h1>All active orders:</h1>
+<h3>Current BTC price: {{ current_BTC }}€</h3>
+<table class="greenTable">
+<thead>
+<tr>
+<th>User</th>
+<th>Order Type</th>
+<th>BTC Amount</th>
+<th>Price</th>
+<th>Date</th>
+</tr>
+</thead>
+<tbody>
+{% for order in orders %}
+<tr>
+<td>{{ order.username }}</td>
+<td>{{ order.type }}</td>
+<td>{{ order.quantity }}</td>
+<td>{{ order.price }}€</td>
+<td>{{ order.datetime }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endblock %}

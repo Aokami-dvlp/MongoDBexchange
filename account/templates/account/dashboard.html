@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+  <h1>Dashboard</h1>
+  <p>Welcome to your dashboard. You can <a href="{% url 'edit' %}">edit your profile</a> or <a href="{% url 'password_change' %}">change your password</a>.</p>
+  <p> Your BTC: {{ profile.BTC }} </p>
+  <p> Pending BTC: {{ profile.pending_BTC }} </p>
+  <p> Your Funds: {{ profile.funds }}€ </p>
+  <p> Pending Funds: {{ profile.pending_funds }}€ </p>
+  <p> Your Profits: {{ profile.profit }}€</p>
+{% endblock %}

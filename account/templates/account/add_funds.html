@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Add funds to your account{% endblock %}
+
+{% block content %}
+  <form method="post">
+      <h1>Add funds to your account</h1>
+      <p> How much you want to add? <br>
+          {{ profile_form.funds }} € </p>
+    {% csrf_token %}
+    <p><input type="submit" value="Add funds"></p>
+  </form>
+{% endblock %}

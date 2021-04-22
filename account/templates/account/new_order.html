@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Create an new order{% endblock %}
+
+{% block content %}
+<h1>Place a new order</h1>
+<h3>Current BTC price: {{ current_BTC }}€</h3>
+  <form method="post">
+    {{ order_form.as_p }}
+    {% csrf_token %}
+    <p><input type="submit" value="Create order"></p>
+  </form>
+{% endblock %}
