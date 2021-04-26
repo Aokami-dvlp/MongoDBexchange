@@ -61,10 +61,10 @@ def new_order(request):
 
 #Request-4 Try to match the new order with existing orders right after publish (following in utils.py)
             if order.type == ('buy'):
-                if order.price <= profile.funds and order.price > 0 and order.quantity > 0:
-                    profile.funds -= order.price
-                    profile.pending_funds += order.price
-                    matchBuy(order, profile, current_BTC)
+                if order.price * order.quantity <= profile.funds and order.price > 0 and order.quantity > 0:
+                    profile.funds -= order.price * order.quantity
+                    profile.pending_funds += order.price * order.quantity
+                    matchBuy(order, profile)
                 else:
                     messages.error(request,'invalid funds amount')
                     return redirect('new_order')
@@ -72,7 +72,7 @@ def new_order(request):
                 if order.quantity <= profile.BTC and order.price > 0 and order.quantity > 0:
                     profile.BTC -= order.quantity
                     profile.pending_BTC += order.quantity
-                    matchSell(order, profile, current_BTC)
+                    matchSell(order, profile)
                 else:
                     messages.error(request,'invalid BTCs amount')
                     return redirect('new_order')

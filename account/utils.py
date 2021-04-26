@@ -10,30 +10,39 @@ def userProfile(username):
     profile.save()
 
 def BTC_price(request):
-    response = requests.get('https://api.coindesk.com/v1/bpi/currentprice.json')
-    data = response.json()
-    current_BTC = data['bpi']['EUR']['rate_float']
+    url = 'http://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest'
+    params = {
+        'start': '1',
+        'limit': '1',
+        'convert': 'EUR'
+    }
+    headers = {
+        'accept': 'application/json',
+        'X-CMC_PRO_API_KEY': '002eb6c7-22c2-41b1-9fdd-d2bf5375da4e'
+    }
+    r = requests.get(url=url, params=params, headers=headers).json()
+    BTC = r['data'][0]
+    current_BTC = round(BTC['quote']['EUR']['price'], 2)
     return current_BTC
 
 #Request-4 Try to match the new order with existing orders right after publish
-def matchBuy(order,profile,current_BTC):
-    sellOrders = Order.sell.filter(status='active')
+def matchBuy(order,profile):
+    sellOrders = Order.sell.filter(status='active').order_by('price')
     BTCremainings = order.quantity
-    fundsRemainings = order.price
+    fundsRemainings = order.price * order.quantity
     for selling in sellOrders:
         sellerProfile = selling.profile
         seller = Profile.objects.get(user=sellerProfile.user)
         if BTCremainings != 0:
-            if BTCremainings >= selling.quantity and (fundsRemainings/BTCremainings) >= (selling.price/selling.quantity):
+            if BTCremainings >= selling.quantity and fundsRemainings >= selling.price:
                 BTCremainings -= selling.quantity
                 fundsRemainings -= selling.price
                 profile.BTC += selling.quantity
                 seller.pending_BTC -= selling.quantity
                 seller.funds += selling.price
                 profile.pending_funds -= selling.price
-                profit = selling.price - (selling.quantity*current_BTC)
-                seller.profit += profit
-                profile.profit -= profit
+                seller.profit += selling.price
+                profile.profit -= selling.price
                 selling.status = 'completed'
                 selling.save()
                 seller.save()
@@ -51,24 +60,23 @@ def matchBuy(order,profile,current_BTC):
         order.price = fundsRemainings
         order.save()
 
-def matchSell(order,profile,current_BTC):
-    buyOrders = Order.buy.filter(status='active')
+def matchSell(order,profile):
+    buyOrders = Order.buy.filter(status='active').order_by('-price')
     BTCremainings = order.quantity
     unitPrice = order.price/order.quantity
     for buying in buyOrders:
         buyerProfile = buying.profile
         buyer = Profile.objects.get(user=buyerProfile.user)
         if BTCremainings != 0:
-            if BTCremainings >= buying.quantity and unitPrice >= (buying.price/buying.quantity):
+            if BTCremainings >= buying.quantity:
                 BTCremainings -= buying.quantity
                 buyer.BTC += buying.quantity
                 profile.pending_BTC -= buying.quantity
                 profile.funds += buying.price
                 buyer.pending_funds -= buying.price
                 order.price = BTCremainings * unitPrice
-                profit = buying.price - (current_BTC*buying.quantity)
-                buyer.profit -= profit
-                profile.profit += profit
+                buyer.profit -= buying.price
+                profile.profit += buying.price
                 buying.status = 'completed'
                 profile.save()
                 buying.save()
