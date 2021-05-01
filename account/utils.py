@@ -33,6 +33,7 @@ def matchBuy(order,profile):
     for selling in sellOrders:
         sellerProfile = selling.profile
         seller = Profile.objects.get(user=sellerProfile.user)
+        sellingUnitPrice = selling.price / selling.quantity
         if BTCremainings != 0:
             if BTCremainings >= selling.quantity and fundsRemainings >= selling.price:
                 BTCremainings -= selling.quantity
@@ -53,7 +54,24 @@ def matchBuy(order,profile):
                     order.save()
                     profile.save()
                     break
-
+            elif BTCremainings < selling.quantity and fundsRemainings >= (sellingUnitPrice * BTCremainings):
+                selling.quantity -= BTCremainings
+                selling.price = sellingUnitPrice * selling.quantity
+                fundsRemainings -= sellingUnitPrice * BTCremainings
+                profile.BTC += BTCremainings
+                seller.pending_BTC -= BTCremainings
+                seller.funds += sellingUnitPrice * BTCremainings
+                profile.pending_funds -= sellingUnitPrice * BTCremainings
+                seller.profit += sellingUnitPrice * BTCremainings
+                profile.profit -= sellingUnitPrice * BTCremainings
+                order.status = 'completed'
+                profile.pending_funds -= fundsRemainings
+                profile.funds += fundsRemainings
+                order.save()
+                seller.save()
+                profile.save()
+                selling.save()
+                break
 
     if order.status == 'active':
         order.quantity = BTCremainings
@@ -63,12 +81,13 @@ def matchBuy(order,profile):
 def matchSell(order,profile):
     buyOrders = Order.buy.filter(status='active').order_by('-price')
     BTCremainings = order.quantity
-    unitPrice = order.price/order.quantity
+    unitPrice = order.price
     for buying in buyOrders:
         buyerProfile = buying.profile
         buyer = Profile.objects.get(user=buyerProfile.user)
+        buyingUnitPrice = buying.price / buying.quantity
         if BTCremainings != 0:
-            if BTCremainings >= buying.quantity:
+            if BTCremainings >= buying.quantity and unitPrice <= buyingUnitPrice:
                 BTCremainings -= buying.quantity
                 buyer.BTC += buying.quantity
                 profile.pending_BTC -= buying.quantity
@@ -85,6 +104,21 @@ def matchSell(order,profile):
                     order.status = 'completed'
                     order.save()
                     break
+            elif BTCremainings < buying.quantity and unitPrice <= buyingUnitPrice:
+                buying.quantity -= BTCremainings
+                buying.price = buyingUnitPrice * buying.quantity
+                buyer.BTC += BTCremainings
+                profile.pending_BTC -= BTCremainings
+                profile.funds += buyingUnitPrice * BTCremainings
+                buyer.pending_funds -= buyingUnitPrice * BTCremainings
+                profile.profit += buyingUnitPrice * BTCremainings
+                buyer.profit -= buyingUnitPrice * BTCremainings
+                order.status = 'completed'
+                order.save()
+                profile.save()
+                buying.save()
+                buyer.save()
+                break
 
     if order.status == 'active':
         order.quantity = BTCremainings
